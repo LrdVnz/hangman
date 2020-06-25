@@ -35,7 +35,7 @@ class Game
   end
 
   def ask_guess
-   @guess = gets.chomp
+   @guess = gets.chomp.downcase
   end
 
   def oneTurn
@@ -45,14 +45,15 @@ class Game
           @winner = true
      end
      showWord
-     @turns += 1
   end
 
   def verify_word
      if @secret_word.include?(@guess)
         # loop through each secret_word letter. If it is equal to guess, put it on coded at the same index.
+        @secret_word.chars.each_with_index { |c, index| @coded[index] = c if @guess == c }
      else 
         @wrong_letters << @guess
+        @turns += 1
      end
   end
 
@@ -63,7 +64,7 @@ class Game
   def showWord 
      puts @coded 
      puts "ditched letters : #{@wrong_letters}"
-     puts "It is turn #{@turns + 1}"
+     puts "You have #{10 - @turns} guesses left"
   end
 end
 
