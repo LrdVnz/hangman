@@ -1,10 +1,13 @@
 require 'json'
+load 'graphics.rb'
 
 words = File.read '5desk.txt'
 DICTIONARY = words.split(' ').map(&:downcase)
 
+
 # Unique class for everything
 class Game
+  include Graphics
   def initialize
     @secret_word = pick_random_word
     @turns = 0
@@ -13,6 +16,7 @@ class Game
     @wrong_letters = []
     puts 'You have 10 turns to guess the secret word.'
     puts 'Choose a letter every turn.'
+    logo
     ask_load
   end
 
@@ -78,6 +82,7 @@ class Game
   end
 
   def game_lost
+    turn10
     puts 'YOU LOSE. The word is :'
     puts @secret_word
   end
@@ -88,6 +93,7 @@ class Game
   end
 
   def one_turn
+    choose_display
     ask_save
     ask_guess
     verify_word
@@ -115,6 +121,6 @@ class Game
     puts "ditched letters : #{@wrong_letters}"
     puts "You have #{10 - @turns} guesses left"
   end
-end
+end 
 
 Game.new
