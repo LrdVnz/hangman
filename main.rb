@@ -1,71 +1,120 @@
-require 'pry'
+require 'json'
 
 words = File.read '5desk.txt'
-DICTIONARY = words.split(' ').map{ |w| w.downcase }
+DICTIONARY = words.split(' ').map(&:downcase)
 
+# Unique class for everything
 class Game
   def initialize
     @secret_word = pick_random_word
     @turns = 0
-    @winner = false 
+    @winner = false
     @coded = create_coded
     @wrong_letters = []
-    puts "You have 10 turns to guess the secret word."
-    puts "Choose a letter every turn."
-    gameRounds
+    puts 'You have 10 turns to guess the secret word.'
+    puts 'Choose a letter every turn.'
+    ask_load
+  end
+
+  def save
+    puts 'Choose the name of the save file'
+    save_name = gets.chomp
+    json = { 'secret_word' => @secret_word,
+             'turns' => @turns, 'winner' => @winner,
+             'coded' => @coded, 'wrong_letters' => @wrong_letters }.to_json
+    gamesave = File.open('./saves/' + save_name, 'w') { |f| f << json }
+  end
+
+  def load
+    puts 'Choose what save to load :'
+    save_name = gets.chomp
+    save = File.read('./saves/' + save_name)
+    data = JSON.parse save  
+    @secret_word = data['secret_word']
+    @turns = data['turns']
+    @winner = data['winner']
+    @coded = data['coded']
+    @wrong_letters = data['wrong_letters']
   end
 
   def pick_random_word
     secret = DICTIONARY.sample
-    secret = DICTIONARY.sample until secret.length < 12 && secret.length > 5  
-    return secret
+    secret = DICTIONARY.sample until secret.length < 12 && secret.length > 5
+    secret
   end
-  
-  def gameRounds
+
+  def ask_load
+    puts 'Do you want to load a game or start a new one ? (load/new)'
+    answer = gets.chomp.downcase
+    if answer == 'load'
+      load
+      game_rounds
+    elsif answer == 'new'
+      game_rounds
+    end
+  end
+
+  def ask_save
+    puts 'Do you want to save the game ? (yes/ no or press enter)'
+    answer = gets.chomp.downcase
+    return nil unless answer == 'yes'
+    save
+    puts 'Exit the game ? (yes/no)'
+    response = gets.chomp.downcase
+    exit if response == 'yes'
+  end
+
+  def game_rounds
     loop do
-     oneTurn
+      one_turn
       if @winner == true
-        puts "YOU WIN"
+        puts 'YOU WIN'
         break
       elsif @turns == 10 && @winner == false
-        puts "YOU LOSE"
+        game_lost
         break
       end
     end
   end
 
-  def ask_guess
-   @guess = gets.chomp.downcase
+  def game_lost
+    puts 'YOU LOSE. The word is :'
+    puts @secret_word
   end
 
-  def oneTurn
-     ask_guess
-     verify_word
-     if @coded == @secret_word
-          @winner = true
-     end
-     showWord
+  def ask_guess
+    puts 'Put your guess.'
+    @guess = gets.chomp.downcase
+  end
+
+  def one_turn
+    ask_save
+    ask_guess
+    verify_word
+    @winner = true if @coded == @secret_word
+    show_word
   end
 
   def verify_word
-     if @secret_word.include?(@guess)
-        # loop through each secret_word letter. If it is equal to guess, put it on coded at the same index.
-        @secret_word.chars.each_with_index { |c, index| @coded[index] = c if @guess == c }
-     else 
-        @wrong_letters << @guess
-        @turns += 1
-     end
+    if @secret_word.include?(@guess)
+      @secret_word.chars.each_with_index do |c, index|
+        @coded[index] = c if @guess == c
+      end
+    else
+      @wrong_letters << @guess
+      @turns += 1
+    end
   end
 
-  def create_coded 
-     @coded = @secret_word.chars.map{ |c| c = '_'}.join('')
+  def create_coded
+    @coded = @secret_word.gsub(/./, '_')
   end
 
-  def showWord 
-     puts @coded 
-     puts "ditched letters : #{@wrong_letters}"
-     puts "You have #{10 - @turns} guesses left"
+  def show_word
+    puts @coded
+    puts "ditched letters : #{@wrong_letters}"
+    puts "You have #{10 - @turns} guesses left"
   end
 end
 
-binding.pry
+Game.new
