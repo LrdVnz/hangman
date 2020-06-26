@@ -29,7 +29,7 @@ class Game
     puts 'Choose what save to load :'
     save_name = gets.chomp
     save = File.read('./saves/' + save_name)
-    data = JSON.parse save  
+    data = JSON.parse(save)  
     @secret_word = data['secret_word']
     @turns = data['turns']
     @winner = data['winner']
